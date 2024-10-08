@@ -6,23 +6,23 @@ using System.Reflection;
 
 namespace eDocsAPI.Repository
 {
-    public class ProjectRepository : IProject
+    public class UserRepository : IUser
     {
         private readonly SQLDbContext context;
 
-        public ProjectRepository(SQLDbContext context)
+        public UserRepository(SQLDbContext context)
         {
             this.context = context;
         }
 
-        public async Task<IList<Project>> Get(string IsActive)
+        public async Task<IList<Users>> Get(string IsActive)
         {
             using var connection = context.CreateConnection();
-            var result = await connection.QueryAsync<Project>(StoredProcedures.SP_Project_GetList, new { IsActive });
+            var result = await connection.QueryAsync<Users>(StoredProcedures.SP_Project_GetList, new { IsActive });
 
             return result.ToList();
         }
-        public async Task<Project> Find(string id)
+        public async Task<Users?> Find(string id)
         {
             var sql = $@"SELECT [ProductId],
                                [ProductName],
@@ -37,20 +37,26 @@ namespace eDocsAPI.Repository
             ";
 
             using var connection = context.CreateConnection();
-            return await connection.QueryFirstOrDefaultAsync<Project>(sql, new { id });
+            return await connection.QueryFirstOrDefaultAsync<Users>(sql, new { id });
         }
-        public async Task Add(Project model)
-        {
-            model.ProjectId = 0;
-            using var connection = context.CreateConnection();
-            await connection.ExecuteAsync(StoredProcedures.SP_Project_UPSERT, new { model.ProjectId, model.ProjectName, model.IsActive, model.CreatedBy, model.UpdatedBy });
-        }
-        public async Task Update(Project model)
+
+        public async Task<Users?> Authenticate(string username, string password)
         {
             using var connection = context.CreateConnection();
-            await connection.ExecuteAsync(StoredProcedures.SP_Project_UPSERT, new { model.ProjectId, model.ProjectName, model.IsActive, model.CreatedBy, model.UpdatedBy });
+            return await connection.QueryFirstOrDefaultAsync<Users>(StoredProcedures.SP_User_GetById, new { username = username, password = password });
         }
-        public async Task<Project> Remove(Project model)
+        public async Task Add(Users model)
+        {
+            model.UserId = 0;
+            using var connection = context.CreateConnection();
+            await connection.ExecuteAsync(StoredProcedures.SP_Project_UPSERT, new { model.UserId, model.UserName, model.IsActive, model.CreatedBy, model.UpdatedBy });
+        }
+        public async Task Update(Users model)
+        {
+            using var connection = context.CreateConnection();
+            await connection.ExecuteAsync(StoredProcedures.SP_Project_UPSERT, new { model.UserId, model.UserName, model.IsActive, model.CreatedBy, model.UpdatedBy });
+        }
+        public async Task<Users> Remove(Users model)
         {
             var sql = $@"
                         DELETE FROM

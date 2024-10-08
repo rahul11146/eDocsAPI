@@ -4,7 +4,7 @@ namespace eDocsAPI.Interface
 {
     public interface IProject
     {
-        Task<IEnumerable<Project>> Get();
+        Task<IList<Project>> Get(string IsActive);
         Task<Project> Find(string id);
         Task Add(Project model);
         Task Update(Project model);
